@@ -1,0 +1,982 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wan Dimension - Synthwave Game Portfolio</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Press Start 2P for Arcade style, Orbitron for futuristic accents -->
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Press+Start+2P&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        * {
+            font-family: 'Press Start 2P', cursive, monospace;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        .font-orbitron {
+            font-family: 'Orbitron', sans-serif;
+        }
+
+        /* CRT Arcade Scanline & Flicker Overlay */
+        .scanlines {
+            background: linear-gradient(
+                rgba(18, 16, 16, 0) 50%, 
+                rgba(0, 0, 0, 0.35) 50%
+            ), linear-gradient(
+                90deg,
+                rgba(255, 0, 0, 0.05),
+                rgba(0, 255, 0, 0.02),
+                rgba(0, 0, 255, 0.05)
+            );
+            background-size: 100% 4px, 6px 100%;
+            pointer-events: none;
+        }
+
+        /* Synthwave Perspective Grid Floor */
+        .synthwave-grid {
+            background: linear-gradient(180deg, rgba(15, 3, 25, 1) 0%, rgba(45, 11, 62, 1) 40%, rgba(217, 38, 115, 0.8) 100%);
+            perspective: 600px;
+            overflow: hidden;
+        }
+
+        .grid-lines {
+            position: absolute;
+            width: 200%;
+            height: 200%;
+            bottom: -50%;
+            left: -50%;
+            background-image: 
+                linear-gradient(to right, rgba(255, 0, 128, 0.6) 2px, transparent 2px),
+                linear-gradient(to bottom, rgba(255, 0, 128, 0.6) 2px, transparent 2px);
+            background-size: 60px 60px;
+            transform: rotateX(75deg);
+            animation: grid-move 4s linear infinite;
+        }
+
+        @keyframes grid-move {
+            0% { transform: rotateX(75deg) translateY(0); }
+            100% { transform: rotateX(75deg) translateY(60px); }
+        }
+
+        /* Glow Text & Pixel Shadows */
+        .glow-title {
+            color: #FFA500;
+            text-shadow: 
+                4px 4px 0px #FF0055,
+                -2px -2px 0px #00FFFF,
+                0 0 20px rgba(255, 165, 0, 0.9);
+        }
+
+        .pixel-button {
+            position: relative;
+            background-color: #ff8c00;
+            color: #120320;
+            border: none;
+            box-shadow: 
+                -4px 0 #ffb700,
+                4px 0 #b35900,
+                0 -4px #ffb700,
+                0 4px #b35900,
+                0 6px 0 4px #000;
+            transition: all 0.1s ease;
+        }
+
+        .pixel-button:hover {
+            transform: translateY(-2px);
+            background-color: #ffa500;
+            box-shadow: 
+                -4px 0 #ffc800,
+                4px 0 #cc6600,
+                0 -4px #ffc800,
+                0 4px #cc6600,
+                0 8px 0 4px #000;
+        }
+
+        .pixel-button:active {
+            transform: translateY(4px);
+            box-shadow: 
+                -4px 0 #ff8c00,
+                4px 0 #ff8c00,
+                0 -4px #ff8c00,
+                0 4px #ff8c00,
+                0 0px 0 4px #000;
+        }
+
+        /* Arcade Window Styling */
+        .arcade-window {
+            background-color: #3b0944;
+            border: 4px solid #791e88;
+            box-shadow: 8px 8px 0px #12021a;
+        }
+
+        .arcade-window-header {
+            background-color: #551263;
+            border-bottom: 3px solid #791e88;
+        }
+
+        /* Follower Pet Styling */
+        #cursorPet {
+            position: fixed;
+            pointer-events: none;
+            z-index: 9999;
+            width: 48px;
+            height: 48px;
+            transform: translate(-50%, -100%);
+            transition: transform 0.05s ease-out;
+            filter: drop-shadow(0 0 8px rgba(255, 165, 0, 0.8));
+            image-rendering: pixelated;
+        }
+
+        .char-card {
+            position: relative;
+        }
+        .char-card .char-tooltip {
+            visibility: hidden;
+            opacity: 0;
+            position: absolute;
+            bottom: 105%;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #120320;
+            color: #ff8c00;
+            text-align: center;
+            padding: 4px 8px;
+            border-radius: 4px;
+            border: 2px solid #ff8c00;
+            font-size: 8px;
+            white-space: nowrap;
+            z-index: 50;
+            transition: opacity 0.2s ease;
+            box-shadow: 0 4px 0 rgba(0,0,0,0.5);
+        }
+        .char-card:hover .char-tooltip {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        #holePortalOverlay {
+            position: fixed;
+            inset: 0;
+            z-index: 99990;
+            pointer-events: none;
+            display: none;
+        }
+
+        #holePortalOverlay.active {
+            display: block;
+        }
+
+        /* Glitchy Neon Energy Ring around the growing hole rim */
+        #portalRimRing {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            width: 10px;
+            height: 10px;
+            margin-top: -5px;
+            margin-left: -5px;
+            border-radius: 50%;
+            border: 6px solid #ff8c00;
+            box-shadow: 
+                0 0 15px #ff8c00,
+                0 0 30px #a855f7,
+                inset 0 0 15px #ffb700;
+            z-index: 99995;
+            pointer-events: none;
+            display: none;
+        }
+
+        #portalRimRing.active {
+            display: block;
+            animation: portalHoleGrowRing 1.1s cubic-bezier(0.7, 0, 0.25, 1) forwards, rimGlitchFlicker 0.1s steps(2) infinite;
+        }
+
+        @keyframes portalHoleGrowRing {
+            0% {
+                transform: scale(1) rotate(0deg);
+                opacity: 1;
+                border-width: 8px;
+            }
+            50% {
+                border-width: 14px;
+                filter: hue-rotate(-30deg) contrast(2);
+            }
+            85% {
+                opacity: 1;
+                border-width: 18px;
+            }
+            100% {
+                transform: scale(260);
+                opacity: 0;
+                border-width: 2px;
+            }
+        }
+
+        @keyframes rimGlitchFlicker {
+            0% {
+                clip-path: circle(50% at 50% 50%);
+                filter: drop-shadow(4px 0 #a855f7) drop-shadow(-4px 0 #ff8c00);
+            }
+            50% {
+                clip-path: polygon(0% 0%, 100% 0%, 100% 85%, 80% 100%, 0% 100%);
+                filter: drop-shadow(-6px 0 #ffb700) drop-shadow(6px 0 #7e22ce);
+            }
+            100% {
+                clip-path: circle(50% at 50% 50%);
+                filter: drop-shadow(3px 0 #ff8c00) drop-shadow(-3px 0 #c084fc);
+            }
+        }
+
+        /* OUTGOING & INCOMING SCREEN Portal Hole Clip Path Animations */
+        .portal-exit-hole {
+            animation: holeExpandExit 1.1s cubic-bezier(0.7, 0, 0.25, 1) forwards;
+            will-change: clip-path, filter;
+        }
+
+        .portal-enter-hole {
+            animation: holeRevealEnter 1.1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            will-change: clip-path, filter, transform;
+        }
+
+        @keyframes holeExpandExit {
+            0% {
+                clip-path: circle(100% at 50% 50%);
+                filter: brightness(1) contrast(1);
+            }
+            30% {
+                clip-path: circle(70% at 50% 50%);
+                filter: brightness(1.3) contrast(1.2) drop-shadow(0 0 10px #ff8c00);
+            }
+            70% {
+                clip-path: circle(25% at 50% 50%);
+                filter: brightness(2) contrast(1.8) drop-shadow(0 0 20px #a855f7);
+            }
+            95% {
+                clip-path: circle(0% at 50% 50%);
+                filter: brightness(4);
+            }
+            100% {
+                clip-path: circle(0% at 50% 50%);
+                opacity: 0;
+            }
+        }
+
+        @keyframes holeRevealEnter {
+            0% {
+                clip-path: circle(0% at 50% 50%);
+                transform: scale(0.92);
+                filter: brightness(2) contrast(1.5) drop-shadow(0 0 20px #ff8c00);
+            }
+            25% {
+                clip-path: circle(18% at 50% 50%);
+                filter: brightness(1.6) contrast(1.3) drop-shadow(0 0 15px #a855f7);
+            }
+            75% {
+                clip-path: circle(75% at 50% 50%);
+                transform: scale(1.02);
+                filter: brightness(1.1);
+            }
+            100% {
+                clip-path: circle(150% at 50% 50%);
+                transform: scale(1);
+                filter: brightness(1) contrast(1);
+            }
+        }
+
+        .modal-animate-enter {
+            animation: modalPopIn 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+        }
+
+        @keyframes modalPopIn {
+            0% { opacity: 0; transform: scale(0.85) translateY(20px); }
+            100% { opacity: 1; transform: scale(1) translateY(0); }
+        }
+
+        /* Image Artwork Click Zoom Effect */
+        .artwork-card {
+            transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+        .artwork-card:hover {
+            transform: scale(1.02);
+            border-color: #ff8c00;
+            box-shadow: 0 0 15px rgba(255, 140, 0, 0.5);
+        }
+    </style>
+</head>
+<body class="bg-[#0f0319] text-white min-h-screen flex flex-col justify-between relative overflow-x-hidden selection:bg-orange-500 selection:text-black">
+
+    <div class="scanlines absolute inset-0 z-50 pointer-events-none fixed"></div>
+
+    <!-- GLITCH HOLE PORTAL OVERLAYS -->
+    <div id="holePortalOverlay"></div>
+    <div id="portalRimRing"></div>
+
+    <!-- CURSOR FOLLOWER PET -->
+    <div id="cursorPet" class="hidden">
+        <img id="petImg" src="" alt="Pet" class="w-full h-full object-contain animate-bounce" style="image-rendering: pixelated;">
+    </div>
+
+    <!-- Audio Mute/Unmute Toggle -->
+    <div class="fixed top-4 right-4 z-50 flex items-center gap-2 bg-[#250633]/80 p-2.5 rounded border border-purple-600">
+        <button id="soundToggleBtn" onclick="toggleSound()" class="text-amber-400 hover:text-amber-200 transition flex items-center justify-center w-6 h-6">
+            <i id="soundIcon" class="fas fa-volume-up text-sm"></i>
+        </button>
+    </div>
+
+    <main id="appContainer" class="relative w-full min-h-screen flex flex-col items-center justify-center p-2 sm:p-6 overflow-hidden">
+
+        <!-- ==========================================
+             1. HOME SCREEN
+        =========================================== -->
+        <section id="screen-home" class="view-screen w-full min-h-screen flex flex-col items-center justify-between relative synthwave-grid p-6">
+            <div class="grid-lines"></div>
+            <div class="absolute inset-0 bg-gradient-to-t from-[#0f0319] via-transparent to-transparent pointer-events-none"></div>
+
+            <div class="z-10 w-full text-left">
+                <span class="text-xl sm:text-2xl text-white font-bold tracking-widest drop-shadow-[2px_2px_0_#ff0055]">HOME</span>
+            </div>
+
+            <div class="z-10 text-center my-auto flex flex-col items-center">
+                <h1 class="glow-title text-4xl sm:text-7xl md:text-8xl font-black tracking-wider leading-tight mb-2 uppercase">
+                    WAN<br/>DIMENSION
+                </h1>
+                <p class="text-pink-400 text-xs sm:text-sm tracking-widest mt-4 uppercase animate-pulse">
+                    Press Start To Enter Portfolio
+                </p>
+            </div>
+
+            <div class="z-10 mb-8 flex flex-col items-center gap-6">
+                <button onclick="navigateTo('screen-character')" class="pixel-button px-8 py-5 text-sm sm:text-base font-bold tracking-wider uppercase text-black">
+                    START GAME
+                </button>
+                
+                <div class="flex flex-col items-center gap-2 text-[10px] sm:text-xs text-purple-300 opacity-80">
+                    <p class="hover:text-amber-400 transition cursor-pointer" onclick="navigateTo('screen-character')">SELECT CHARACTER</p>
+                    <p class="hover:text-amber-400 transition cursor-pointer" onclick="navigateTo('screen-stats')">STATS</p>
+                    <p class="hover:text-amber-400 transition cursor-pointer" onclick="navigateTo('screen-levels')">SELECT LEVELS</p>
+                    <p class="hover:text-amber-400 transition cursor-pointer" onclick="openContactModal()">CONTINUE?</p>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- ==========================================
+             2. CHARACTER SELECT SCREEN
+        =========================================== -->
+        <section id="screen-character" class="view-screen hidden w-full max-w-6xl min-h-screen flex flex-col justify-between p-4 sm:p-8 bg-[#150424]">
+            
+            <div class="w-full flex items-center justify-between border-b-2 border-purple-800 pb-4 mb-6">
+                <h2 class="text-lg sm:text-2xl text-white font-bold tracking-wide">
+                    SELECT CHARACTER<span class="text-amber-400 text-sm sm:text-lg">(About Me)</span>
+                </h2>
+                <button onclick="navigateTo('screen-home')" class="text-xs text-pink-400 hover:text-white transition">
+                    &lt; BACK TO MAIN
+                </button>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 my-auto items-center">
+                
+                <div class="lg:col-span-6 flex flex-col items-center justify-center relative my-4 lg:my-0">
+                    <div class="relative w-80 sm:w-96 h-96 sm:h-[450px] flex items-center justify-center border-4 border-amber-500 rounded-lg p-2 bg-[#2a0845]/60 shadow-[0_0_20px_rgba(255,140,0,0.3)]">
+                        <img id="characterSprite" src="images/profileimage.jpeg" alt="Character Sprite" class="w-full h-full object-contain rounded">
+                    </div>
+                </div>
+
+                <div class="lg:col-span-6 flex flex-col gap-6 text-left bg-[#200630] p-6 rounded-lg border-2 border-purple-800">
+                    <div>
+                        <h3 class="text-base sm:text-lg font-bold text-amber-400 mb-3 border-b border-purple-700 pb-1 uppercase">
+                            MAKLUMAT PERIBADI
+                        </h3>
+                        <div class="space-y-2 text-xs sm:text-sm text-purple-100 font-sans">
+                            <p><span class="font-bold text-pink-400 font-mono">Nama Penuh:</span> Wan Nafiz Iman Bin Wan Shahrul Nizam</p>
+                            <p><span class="font-bold text-pink-400 font-mono">Gelaran:</span> Wan</p>
+                            <p><span class="font-bold text-pink-400 font-mono">Umur:</span> 20 Tahun</p>
+                            <p><span class="font-bold text-pink-400 font-mono">Tarikh Lahir:</span> 27 Desember</p>
+                            <p><span class="font-bold text-pink-400 font-mono">Bangsa:</span> Malaysia</p>
+                        </div>
+                    </div>
+
+                    <div>
+                        <h3 class="text-base sm:text-lg font-bold text-amber-400 mb-3 border-b border-purple-700 pb-1 uppercase">
+                            PENDIDIKAN
+                        </h3>
+                        <div class="space-y-4 text-xs sm:text-sm text-purple-100 font-sans">
+                            <div>
+                                <p class="text-amber-300 font-bold font-mono">2026 – Present</p>
+                                <p class="font-semibold text-white">Diploma Creative Digital Technology</p>
+                                <p class="text-purple-300 text-xs">Politeknik Tuanku Syed Sirajuddin</p>
+                            </div>
+                            <div>
+                                <p class="text-amber-300 font-bold font-mono">2019 – 2024</p>
+                                <p class="font-semibold text-white">Secondary Education</p>
+                                <p class="text-purple-300 text-xs">SMK Tungku Bendahara</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="w-full flex justify-center mt-6">
+                <button onclick="navigateTo('screen-stats')" class="pixel-button px-8 py-4 text-xs sm:text-sm font-bold tracking-wider uppercase text-black">
+                    SELECT CHARACTER
+                </button>
+            </div>
+        </section>
+
+
+        <!-- ==========================================
+             3. STATS SCREEN
+        =========================================== -->
+        <section id="screen-stats" class="view-screen hidden w-full max-w-5xl min-h-screen flex flex-col justify-between p-4 sm:p-8 bg-[#150424]">
+            
+            <div class="w-full flex items-center justify-between border-b-2 border-purple-800 pb-4 mb-6">
+                <h2 class="text-lg sm:text-2xl text-white font-bold tracking-wide">
+                    STATS<span class="text-amber-400 text-sm sm:text-lg">(Skills)</span>
+                </h2>
+                <button onclick="navigateTo('screen-character')" class="text-xs text-pink-400 hover:text-white transition">
+                    &lt; BACK
+                </button>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-12 gap-8 my-auto items-center">
+                <div class="md:col-span-5 flex justify-center">
+                    <div class="relative w-56 sm:w-72 h-80 sm:h-96 flex items-center justify-center border-4 border-amber-500 rounded-lg p-2 bg-[#2a0845]/60 shadow-[0_0_20px_rgba(255,140,0,0.3)]">
+                        <img id="statsSprite" src="images/MEretro2.png" alt="Stats Character Sprite" class="w-full h-full object-contain rounded">
+                    </div>
+                </div>
+
+                <div class="md:col-span-7">
+                    <div class="arcade-window rounded-lg overflow-hidden relative">
+                        <div class="arcade-window-header p-3 flex items-center gap-2">
+                            <span class="w-3 h-3 rounded-full bg-red-500 inline-block"></span>
+                            <span class="w-3 h-3 rounded-full bg-yellow-500 inline-block"></span>
+                            <span class="w-3 h-3 rounded-full bg-green-500 inline-block"></span>
+                        </div>
+
+                        <div class="p-6 sm:p-8 space-y-8">
+                            <div class="text-center">
+                                <h3 class="text-xl sm:text-2xl font-bold text-white tracking-widest uppercase">
+                                    CHARACTER STATS
+                                </h3>
+                            </div>
+
+                            <div class="space-y-2">
+                                <div class="flex justify-between text-xs sm:text-sm text-white">
+                                    <span>3D Modelling</span>
+                                    <span class="text-amber-400">85%</span>
+                                </div>
+                                <div class="flex gap-1">
+                                    <div class="h-6 flex-1 bg-amber-500 rounded-sm"></div>
+                                    <div class="h-6 flex-1 bg-amber-500 rounded-sm"></div>
+                                    <div class="h-6 flex-1 bg-amber-500 rounded-sm"></div>
+                                    <div class="h-6 flex-1 bg-amber-500 rounded-sm"></div>
+                                    <div class="h-6 flex-1 bg-amber-500 rounded-sm"></div>
+                                    <div class="h-6 flex-1 bg-purple-950 rounded-sm"></div>
+                                    <div class="h-6 flex-1 bg-purple-950 rounded-sm"></div>
+                                </div>
+                            </div>
+
+                            <div class="space-y-2">
+                                <div class="flex justify-between text-xs sm:text-sm text-white">
+                                    <span>3D Designing</span>
+                                    <span class="text-amber-400">90%</span>
+                                </div>
+                                <div class="flex gap-1">
+                                    <div class="h-6 flex-1 bg-amber-500 rounded-sm"></div>
+                                    <div class="h-6 flex-1 bg-amber-500 rounded-sm"></div>
+                                    <div class="h-6 flex-1 bg-amber-500 rounded-sm"></div>
+                                    <div class="h-6 flex-1 bg-amber-500 rounded-sm"></div>
+                                    <div class="h-6 flex-1 bg-amber-500 rounded-sm"></div>
+                                    <div class="h-6 flex-1 bg-amber-500 rounded-sm"></div>
+                                    <div class="h-6 flex-1 bg-purple-950 rounded-sm"></div>
+                                </div>
+                            </div>
+
+                            <div class="space-y-2">
+                                <div class="flex justify-between text-xs sm:text-sm text-white">
+                                    <span>Poster Development</span>
+                                    <span class="text-amber-400">80%</span>
+                                </div>
+                                <div class="flex gap-1">
+                                    <div class="h-6 flex-1 bg-amber-500 rounded-sm"></div>
+                                    <div class="h-6 flex-1 bg-amber-500 rounded-sm"></div>
+                                    <div class="h-6 flex-1 bg-amber-500 rounded-sm"></div>
+                                    <div class="h-6 flex-1 bg-amber-500 rounded-sm"></div>
+                                    <div class="h-6 flex-1 bg-purple-950 rounded-sm"></div>
+                                    <div class="h-6 flex-1 bg-purple-950 rounded-sm"></div>
+                                    <div class="h-6 flex-1 bg-purple-950 rounded-sm"></div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="w-full flex justify-center mt-6">
+                <button onclick="navigateTo('screen-levels')" class="pixel-button px-8 py-4 text-xs sm:text-sm font-bold tracking-wider uppercase text-black">
+                    CONFIRM
+                </button>
+            </div>
+        </section>
+
+
+        <!-- ==========================================
+             4. SELECT LEVEL SCREEN
+        =========================================== -->
+        <section id="screen-levels" class="view-screen hidden w-full max-w-6xl min-h-screen flex flex-col justify-between p-4 sm:p-8 bg-[#150424]">
+            
+            <div class="w-full flex items-center justify-between border-b-2 border-purple-800 pb-4 mb-6">
+                <div class="flex items-center gap-4">
+                    <button onclick="navigateTo('screen-home')" class="pixel-button w-10 h-10 flex items-center justify-center text-black rounded text-sm" title="Home">
+                        <i class="fas fa-home"></i>
+                    </button>
+                    <h2 class="text-lg sm:text-2xl text-white font-bold tracking-wide">
+                        SELECT LEVELS<span class="text-amber-400 text-sm sm:text-lg">(Project)</span>
+                    </h2>
+                </div>
+                <button onclick="navigateTo('screen-stats')" class="text-xs text-pink-400 hover:text-white transition">
+                    &lt; BACK
+                </button>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 my-auto">
+                <div onclick="openProjectModal('01')" class="bg-[#ff8c00] rounded-xl p-2 cursor-pointer transition transform hover:-translate-y-2 hover:shadow-[0_0_25px_rgba(255,140,0,0.6)] flex flex-col justify-between group">
+                    <div class="bg-[#ff9d26] py-2 text-center rounded-t-lg mb-2">
+                        <span class="text-2xl font-black text-white drop-shadow-[2px_2px_0_#000]">01</span>
+                    </div>
+                    <div class="bg-purple-950 rounded border-2 border-amber-600 overflow-hidden h-64 relative flex items-center justify-center">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent z-10"></div>
+                        <img src="https://placehold.co/600x800/2a0845/ff8c00?text=3D+MODELLING" alt="3D Modelling Project" class="w-full h-full object-cover group-hover:scale-105 transition duration-300">
+                        <span class="absolute bottom-3 left-3 z-20 text-xs text-amber-300 bg-black/60 px-2 py-1 rounded">LEVEL 1</span>
+                    </div>
+                    <div class="py-4 text-center">
+                        <h3 class="text-base font-extrabold text-white uppercase tracking-wider drop-shadow-[1px_1px_0_#000]">
+                            3D MODELLING
+                        </h3>
+                    </div>
+                </div>
+
+                <div onclick="openProjectModal('02')" class="bg-[#ff8c00] rounded-xl p-2 cursor-pointer transition transform hover:-translate-y-2 hover:shadow-[0_0_25px_rgba(255,140,0,0.6)] flex flex-col justify-between group">
+                    <div class="bg-[#ff9d26] py-2 text-center rounded-t-lg mb-2">
+                        <span class="text-2xl font-black text-white drop-shadow-[2px_2px_0_#000]">02</span>
+                    </div>
+                    <div class="bg-purple-950 rounded border-2 border-amber-600 overflow-hidden h-64 relative flex items-center justify-center">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent z-10"></div>
+                        <img src="https://placehold.co/600x800/3b0944/ffa500?text=3D+DESIGNING" alt="3D Animation Project" class="w-full h-full object-cover group-hover:scale-105 transition duration-300">
+                        <span class="absolute bottom-3 left-3 z-20 text-xs text-amber-300 bg-black/60 px-2 py-1 rounded">LEVEL 2</span>
+                    </div>
+                    <div class="py-4 text-center">
+                        <h3 class="text-base font-extrabold text-white uppercase tracking-wider drop-shadow-[1px_1px_0_#000]">
+                            3D Designing
+                        </h3>
+                    </div>
+                </div>
+
+                <div onclick="openProjectModal('03')" class="bg-[#ff8c00] rounded-xl p-2 cursor-pointer transition transform hover:-translate-y-2 hover:shadow-[0_0_25px_rgba(255,140,0,0.6)] flex flex-col justify-between group">
+                    <div class="bg-[#ff9d26] py-2 text-center rounded-t-lg mb-2">
+                        <span class="text-2xl font-black text-white drop-shadow-[2px_2px_0_#000]">03</span>
+                    </div>
+                    <div class="bg-purple-950 rounded border-2 border-amber-600 overflow-hidden h-64 relative flex items-center justify-center">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent z-10"></div>
+                        <img src="https://placehold.co/600x800/4c0635/ffb700?text=POSTER+DESIGN" alt="Game Design Project" class="w-full h-full object-cover group-hover:scale-105 transition duration-300">
+                        <span class="absolute bottom-3 left-3 z-20 text-xs text-amber-300 bg-black/60 px-2 py-1 rounded">LEVEL 3</span>
+                    </div>
+                    <div class="py-4 text-center">
+                        <h3 class="text-base font-extrabold text-white uppercase tracking-wider drop-shadow-[1px_1px_0_#000]">
+                            POSTER DESIGN
+                        </h3>
+                    </div>
+                </div>
+            </div>
+
+            <div class="text-center text-xs text-purple-300 mt-4">
+                Click on any level to view project details & artwork
+            </div>
+        </section>
+
+    </main>
+
+
+    <!-- PROJECT DETAILS MODAL -->
+    <div id="projectModal" class="fixed inset-0 bg-black/85 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-[#200630] border-4 border-amber-500 rounded-lg max-w-3xl w-full max-h-[90vh] overflow-y-auto p-6 relative flex flex-col justify-between">
+            <button onclick="closeProjectModal()" class="absolute top-4 right-4 text-amber-400 hover:text-white text-xl z-20">
+                <i class="fas fa-times"></i>
+            </button>
+
+            <div>
+                <div class="flex items-center gap-3 mb-2">
+                    <span id="modalLevelNum" class="bg-amber-500 text-black px-3 py-1 font-bold text-sm rounded">LEVEL 01</span>
+                    <h3 id="modalTitle" class="text-lg sm:text-xl font-bold text-white uppercase">3D MODELLING SHOWCASE</h3>
+                </div>
+
+                <p class="text-[10px] text-amber-300 mb-4 animate-pulse">💡 Click on any image below to view it full screen!</p>
+
+                <!-- Interactive Artwork Image Cards -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                    <div class="artwork-card group relative rounded border-2 border-purple-700 overflow-hidden bg-purple-950 flex flex-col">
+                        <img id="modalImg1" src="https://placehold.co/600x400/2a0845/ff8c00?text=ARTWORK+1" class="w-full h-48 object-cover cursor-pointer hover:opacity-90 transition" alt="Project Shot 1" onclick="openFullscreenImage(this.src)">
+                        <div onclick="openArtworkDetail(1)" class="cursor-pointer bg-gradient-to-t from-black/90 via-black/50 to-transparent p-2.5 flex items-center justify-between">
+                            <span id="modalImg1Tag" class="text-[10px] text-amber-300 font-bold uppercase truncate">Photoshop & Illustrator Render</span>
+                            <span class="text-[10px] bg-amber-500 text-black px-2 py-0.5 rounded font-bold uppercase group-hover:bg-amber-400 flex items-center gap-1">
+                                <i class="fas fa-search-plus"></i> View Info
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="artwork-card group relative rounded border-2 border-purple-700 overflow-hidden bg-purple-950 flex flex-col">
+                        <img id="modalImg2" src="https://placehold.co/600x400/3b0944/ffa500?text=ARTWORK+2" class="w-full h-48 object-cover cursor-pointer hover:opacity-90 transition" alt="Project Shot 2" onclick="openFullscreenImage(this.src)">
+                        <div onclick="openArtworkDetail(2)" class="cursor-pointer bg-gradient-to-t from-black/90 via-black/50 to-transparent p-2.5 flex items-center justify-between">
+                            <span id="modalImg2Tag" class="text-[10px] text-amber-300 font-bold uppercase truncate">Fidget Keyboard Toy</span>
+                            <span class="text-[10px] bg-amber-500 text-black px-2 py-0.5 rounded font-bold uppercase group-hover:bg-amber-400 flex items-center gap-1">
+                                <i class="fas fa-search-plus"></i> View Info
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <p id="modalDesc" class="text-xs sm:text-sm text-purple-200 font-sans leading-relaxed mb-6">
+                    Detailed high-poly character sculpts, retopology, texturing, and game-ready asset optimization for sci-fi and fantasy environments.
+                </p>
+            </div>
+
+            <div class="flex flex-col sm:flex-row justify-between items-center gap-4 border-t border-purple-800 pt-4">
+                <span class="text-xs text-amber-300">Ready to play level / start collaboration?</span>
+                <button onclick="startLevelToContact()" class="pixel-button px-6 py-3 text-xs font-bold uppercase text-black">
+                    START LEVEL
+                </button>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- FULLSCREEN IMAGE LIGHTBOX OVERLAY -->
+    <div id="fullscreenImageModal" class="fixed inset-0 bg-black/95 z-[60] hidden flex items-center justify-center p-4">
+        <button onclick="closeFullscreenImage()" class="absolute top-6 right-6 text-amber-400 hover:text-white text-2xl z-70 bg-black/50 p-3 rounded-full border border-amber-500 cursor-pointer">
+            <i class="fas fa-times"></i>
+        </button>
+        <div class="relative max-w-5xl max-h-[90vh] flex items-center justify-center">
+            <img id="fullscreenImg" src="" class="max-w-full max-h-[85vh] object-contain rounded border-2 border-amber-500 shadow-[0_0_40px_rgba(255,140,0,0.6)]" alt="Full Preview">
+        </div>
+    </div>
+
+
+    <!-- INDIVIDUAL ARTWORK INSPECTOR MODAL -->
+    <div id="artworkDetailModal" class="fixed inset-0 bg-black/90 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-[#1a0428] border-4 border-orange-500 rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6 relative flex flex-col justify-between shadow-[0_0_30px_rgba(255,140,0,0.4)]">
+            <button onclick="closeArtworkDetail()" class="absolute top-4 right-4 text-amber-400 hover:text-white text-xl z-10">
+                <i class="fas fa-arrow-left"></i> <span class="text-xs font-bold uppercase">Back</span>
+            </button>
+
+            <div>
+                <div class="flex items-center gap-2 mb-3">
+                    <span class="text-xs text-orange-400 font-bold uppercase tracking-widest">[ ARTWORK INSPECTOR ]</span>
+                </div>
+
+                <div class="rounded border-2 border-orange-500 overflow-hidden bg-black mb-4 flex items-center justify-center max-h-72 cursor-pointer" onclick="openFullscreenImage(document.getElementById('artworkDetailImg').src)">
+                    <img id="artworkDetailImg" src="" class="w-full h-full object-contain" alt="Artwork Preview">
+                </div>
+
+                <h4 id="artworkDetailTitle" class="text-sm sm:text-base font-bold text-amber-400 mb-2 uppercase">
+                    ARTWORK TITLE
+                </h4>
+
+                <div class="bg-[#2a0845] p-4 rounded border border-purple-700 mb-4 font-sans text-xs text-purple-100 leading-relaxed">
+                    <p id="artworkDetailDesc">Detailed breakdown of this specific artwork asset.</p>
+                </div>
+
+                <div class="flex flex-wrap items-center gap-2 text-[10px] font-sans">
+                    <span class="text-pink-400 font-bold font-mono">Tools Used:</span>
+                    <span id="artworkDetailTools" class="bg-purple-900/80 text-amber-300 px-2 py-1 rounded border border-purple-600 font-mono">Blender, ZBrush, Substance Painter</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- CONTACT / CONTINUE MODAL -->
+    <div id="contactModal" class="fixed inset-0 bg-black/90 z-50 hidden flex items-center justify-center p-4">
+        <div class="arcade-window max-w-md w-full rounded-lg p-6 relative text-center">
+            <button onclick="closeContactModal()" class="absolute top-3 right-3 text-purple-400 hover:text-white">
+                <i class="fas fa-times"></i>
+            </button>
+
+            <h3 class="text-xl font-bold text-amber-400 mb-2 uppercase tracking-widest">
+                CONTINUE?
+            </h3>
+            <p class="text-xs text-purple-200 mb-6 font-sans">
+                Get in touch to unlock the next level together!
+            </p>
+
+            <div class="space-y-4 text-left font-sans text-xs sm:text-sm mb-6">
+                <div class="flex items-center gap-3 bg-[#12021a] p-3 rounded border border-purple-800">
+                    <i class="fas fa-envelope text-amber-400 text-lg"></i>
+                    <div>
+                        <p class="text-purple-400 text-[10px] uppercase font-mono">Email</p>
+                        <p class="text-white font-bold">wan.dimension@email.com</p>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-3 bg-[#12021a] p-3 rounded border border-purple-800">
+                    <i class="fas fa-phone text-amber-400 text-lg"></i>
+                    <div>
+                        <p class="text-purple-400 text-[10px] uppercase font-mono">Phone number</p>
+                        <p class="text-white font-bold">018-702-2739</p>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-3 bg-[#12021a] p-3 rounded border border-purple-800">
+                    <i class="fab fa-linkedin text-amber-400 text-lg"></i>
+                    <div>
+                        <p class="text-purple-400 text-[10px] uppercase font-mono">LinkedIn</p>
+                        <p class="text-white font-bold">linkedin.com/in/wan-dimension</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex justify-center gap-4">
+                <button onclick="closeContactModal()" class="pixel-button px-6 py-3 text-xs font-bold uppercase text-black">
+                    RESTART
+                </button>
+            </div>
+        </div>
+    </div>
+
+
+    <script>
+        let soundEnabled = true;
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+        function playRetroBeep(freq = 440, type = 'square', duration = 0.1) {
+            if (!soundEnabled) return;
+            try {
+                if (audioCtx.state === 'suspended') {
+                    audioCtx.resume();
+                }
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = type;
+                osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+                gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start();
+                osc.stop(audioCtx.currentTime + duration);
+            } catch(e) {
+                console.log("Audio play error", e);
+            }
+        }
+
+        function toggleSound() {
+            soundEnabled = !soundEnabled;
+            const icon = document.getElementById('soundIcon');
+            if (soundEnabled) {
+                icon.className = "fas fa-volume-up text-sm";
+                playRetroBeep(523.25, 'square', 0.1);
+            } else {
+                icon.className = "fas fa-volume-mute text-sm";
+            }
+        }
+
+        let isNavigating = false;
+
+        // GLITCH HOLE PORTAL NAVIGATION LOGIC
+        function navigateTo(screenId) {
+            if (isNavigating) return;
+            
+            const currentScreen = document.querySelector('.view-screen:not(.hidden)');
+            const targetScreen = document.getElementById(screenId);
+
+            if (!targetScreen || currentScreen === targetScreen) return;
+
+            isNavigating = true;
+
+            // Retro Arcade Portal Opening Audio Sweep
+            playRetroBeep(220, 'square', 0.15);
+            setTimeout(() => playRetroBeep(440, 'sawtooth', 0.2), 150);
+            setTimeout(() => playRetroBeep(880, 'square', 0.3), 350);
+
+            const rimRing = document.getElementById('portalRimRing');
+            if (rimRing) {
+                rimRing.classList.remove('active');
+                void rimRing.offsetWidth;
+                rimRing.classList.add('active');
+            }
+
+            // Start hole shrinking exit animation on current screen
+            if (currentScreen) {
+                currentScreen.classList.remove('portal-enter-hole');
+                currentScreen.classList.add('portal-exit-hole');
+            }
+
+            setTimeout(() => {
+                if (currentScreen) {
+                    currentScreen.classList.add('hidden');
+                    currentScreen.classList.remove('portal-exit-hole');
+                }
+
+                targetScreen.classList.remove('hidden');
+                targetScreen.classList.add('portal-enter-hole');
+
+                setTimeout(() => {
+                    targetScreen.classList.remove('portal-enter-hole');
+                    if (rimRing) rimRing.classList.remove('active');
+                    isNavigating = false;
+                }, 1100);
+            }, 550);
+        }
+
+        // Project Modals & Artwork Inspector
+        let currentOpenLevelId = '01';
+
+        const projectsData = {
+            '01': {
+                title: "3D MODELLING SHOWCASE",
+                level: "LEVEL 01",
+                img1: "images/3D Artworks.jpg",
+                img2: "images/3D Artworks 2.jpg",
+                desc: "Hasil kerja yang dihasilkan pada waktu lapang",
+                artworks: {
+                    1: {
+                        title: "Illustrator & Photoshop Logo",
+                        tag: "Illustrator & Photoshop",
+                        desc: "Logo Adobe Illustrator dan logo Adobe Photoshop dihasilkan dalam bentuk 3D",
+                        tools: "Adobe Illustrator"
+                    },
+                    2: {
+                        title: "Fidget Keyboard Toy",
+                        tag: "Fidget Keyboard",
+                        desc: "Sejenis Mainan berbentuk papan kekunci dengan warna yang menarik",
+                        tools: "Adobe Illustrator"
+                    }
+                }
+            },
+            '02': {
+                title: "3D DESIGN",
+                level: "LEVEL 02",
+                img1: "images/3D Logo.jpg",
+                img2: "images/3D logo2.jpg",
+                desc: "Logo dari projek kelas",
+                artworks: {
+                    1: {
+                        title: "Logo Tetrarama",
+                        tag: "Tetrarama",
+                        desc: "Logo sebuah syarikat VR",
+                        tools: "Adobe Illustrator"
+                    },
+                    2: {
+                        title: "Logo Black Star",
+                        tag: "Black Star",
+                        desc: "Logo peribadi yang mencerminkan diri sendiri",
+                        tools: "Adobe Illustrator"
+                    }
+                }
+            },
+            '03': {
+                title: "POSTER DESIGN",
+                level: "LEVEL 03",
+                img1: "images/poster2.jpg",
+                img2: "images/postervr.png",
+                desc: "Poster-poster ini dihasilkan semasa kelas",
+                artworks: {
+                    1: {
+                        title: "Your Mental Landscape",
+                        tag: "Mental Landscape",
+                        desc: "Poster yang mempromosikan tips-tips kesihatan mental",
+                        tools: "Adobe Photoshop"
+                    },
+                    2: {
+                        title: "Poster VR Headset",
+                        tag: "Poster VR",
+                        desc: "Poster yang mempromosikan sebuah jenama VR Headset",
+                        tools: "Adobe Illustrator, Adobe Photoshop"
+                    }
+                }
+            }
+        };
+
+        function openProjectModal(levelId) {
+            playRetroBeep(450, 'square', 0.1);
+            currentOpenLevelId = levelId;
+            const data = projectsData[levelId];
+            if (data) {
+                document.getElementById('modalLevelNum').innerText = data.level;
+                document.getElementById('modalTitle').innerText = data.title;
+                document.getElementById('modalImg1').src = data.img1;
+                document.getElementById('modalImg2').src = data.img2;
+                document.getElementById('modalImg1Tag').innerText = data.artworks[1].tag;
+                document.getElementById('modalImg2Tag').innerText = data.artworks[2].tag;
+                document.getElementById('modalDesc').innerText = data.desc;
+                const modal = document.getElementById('projectModal');
+                modal.classList.remove('hidden');
+                modal.firstElementChild.classList.add('modal-animate-enter');
+            }
+        }
+
+        function openFullscreenImage(imgSrc) {
+            playRetroBeep(600, 'square', 0.1);
+            document.getElementById('fullscreenImg').src = imgSrc;
+            const modal = document.getElementById('fullscreenImageModal');
+            modal.classList.remove('hidden');
+            modal.firstElementChild.classList.add('modal-animate-enter');
+        }
+
+        function closeFullscreenImage() {
+            playRetroBeep(200, 'square', 0.08);
+            document.getElementById('fullscreenImageModal').classList.add('hidden');
+        }
+
+        function openArtworkDetail(imgIndex) {
+            playRetroBeep(550, 'square', 0.12);
+            const levelData = projectsData[currentOpenLevelId];
+            if (!levelData || !levelData.artworks[imgIndex]) return;
+
+            const art = levelData.artworks[imgIndex];
+            const imgSrc = imgIndex === 1 ? levelData.img1 : levelData.img2;
+
+            document.getElementById('artworkDetailImg').src = imgSrc;
+            document.getElementById('artworkDetailTitle').innerText = art.title;
+            document.getElementById('artworkDetailDesc').innerText = art.desc;
+            document.getElementById('artworkDetailTools').innerText = art.tools;
+
+            const modal = document.getElementById('artworkDetailModal');
+            modal.classList.remove('hidden');
+            modal.firstElementChild.classList.add('modal-animate-enter');
+        }
+
+        function closeArtworkDetail() {
+            playRetroBeep(200, 'square', 0.08);
+            document.getElementById('artworkDetailModal').classList.add('hidden');
+        }
+
+        function closeProjectModal() {
+            playRetroBeep(200, 'square', 0.08);
+            document.getElementById('projectModal').classList.add('hidden');
+        }
+
+        function startLevelToContact() {
+            closeProjectModal();
+            openContactModal();
+        }
+
+        function openContactModal() {
+            playRetroBeep(800, 'sine', 0.2);
+            const modal = document.getElementById('contactModal');
+            modal.classList.remove('hidden');
+            modal.firstElementChild.classList.add('modal-animate-enter');
+        }
+
+        function closeContactModal() {
+            playRetroBeep(200, 'square', 0.08);
+            document.getElementById('contactModal').classList.add('hidden');
+        }
+    </script>
+</body>
+</html>
